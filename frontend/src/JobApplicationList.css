@@ -1,0 +1,40 @@
+.job-application-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 18px;
+  text-align: left;
+}
+
+.job-application-table th, .job-application-table td {
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+}
+
+.job-application-table th {
+  background-color: #f2f2f2;
+}
+
+.description-container {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.description.expanded {
+  white-space: normal;
+}
+
+button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #45a049;
+}

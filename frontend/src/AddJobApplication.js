@@ -2,51 +2,52 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 const AddJobApplication = ({ onAdd }) => {
-  const [company, setCompany] = useState('');
-  const [position, setPosition] = useState('');
   const [status, setStatus] = useState('');
   const [description, setDescription] = useState('');
   const [link, setLink] = useState('');
+  const [date, setDate] = useState('');
+  const [alertDate, setAlertDate] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [title, setTitle] = useState('');
+  const [company, setCompany] = useState('');
+  const [startDate, setStartDate] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onAdd({ company, position, status, description, link });
-    setCompany('');
-    setPosition('');
+    onAdd({ status, description, link, date, alertDate, title, company, startDate });
     setStatus('');
     setDescription('');
     setLink('');
+    setDate('');
+    setAlertDate('');
+    setTitle('');
+    setCompany('');
+    setStartDate('');
   };
 
   const handleFetchDescription = async () => {
+    if (!link) return;
+    
+    setIsLoading(true);
     try {
+      // Wait for 2 seconds before fetching
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       const response = await axios.post('http://localhost:3001/fetch-job-description', { url: link });
-      setDescription(response.data.jobDescription);
+      const { jobDescription, jobTitle, companyName, startDate } = response.data;
+      setDescription(jobDescription);
+      setTitle(jobTitle);
+      setCompany(companyName);
+      setStartDate(startDate);
     } catch (error) {
       console.error('Failed to fetch job description', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <div>
-        <label>Company:</label>
-        <input
-          type="text"
-          value={company}
-          onChange={(e) => setCompany(e.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <label>Position:</label>
-        <input
-          type="text"
-          value={position}
-          onChange={(e) => setPosition(e.target.value)}
-          required
-        />
-      </div>
       <div>
         <label>Status:</label>
         <select
@@ -75,6 +76,16 @@ const AddJobApplication = ({ onAdd }) => {
           required
         />
       </div>
+      <div>
+        <label>Date:</label>
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          required
+        />
+      </div>
+      {isLoading && <div>Fetching job description...</div>}
       {description && (
         <div>
           <label>Job Description:</label>

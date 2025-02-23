@@ -39,6 +39,20 @@ function App() {
     setNotification('Job application status updated!');
   };
 
+  const handleUpdateDate = (index, newDate) => {
+    const updatedApplications = [...applications];
+    updatedApplications[index].date = newDate;
+    setApplications(updatedApplications);
+    setNotification('Job application date updated!');
+  };
+
+  const handleUpdateAlertDate = (index, newAlertDate) => {
+    const updatedApplications = [...applications];
+    updatedApplications[index].alertDate = newAlertDate;
+    setApplications(updatedApplications);
+    setNotification('Job application alert date updated!');
+  };
+
   const handleDeleteApplication = (index) => {
     const updatedApplications = applications.filter((_, i) => i !== index);
     setApplications(updatedApplications);
@@ -61,7 +75,7 @@ function App() {
       </header>
       {notification && <div className="notification">{notification}</div>}
       <AddJobApplication onAdd={handleAddApplication} />
-      <JobApplicationList applications={applications} onUpdateStatus={handleUpdateStatus} onDelete={handleDeleteApplication} />
+      <JobApplicationList applications={applications} onUpdateStatus={handleUpdateStatus} onUpdateDate={handleUpdateDate} onUpdateAlertDate={handleUpdateAlertDate} onDelete={handleDeleteApplication} />
     </div>
   );
 }
