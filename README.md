@@ -8,6 +8,7 @@ A web application to keep track of every job application you have applied to. Yo
 backend/
   index.js
   package.json
+  jobApplications.json
 frontend/
   package.json
   public/
@@ -19,11 +20,14 @@ frontend/
     robots.txt
   README.md
   src/
+    AddJobApplication.js
     App.css
     App.js
     App.test.js
     index.css
     index.js
+    JobApplicationList.css
+    JobApplicationList.js
     logo.svg
     reportWebVitals.js
     setupTests.js
@@ -62,3 +66,20 @@ frontend/
 ## Running the Application
 - The backend server will be running on `http://localhost:3001`
 - The frontend development server will be running on `http://localhost:3000`
+
+## Fetching Job Descriptions
+
+### LinkedIn Job Descriptions
+To fetch job descriptions from LinkedIn, the backend uses Selenium with Firefox. The script simulates human-like behavior to avoid detection and uses Google's DNS for resolution.
+
+### General Job Descriptions
+For general job descriptions, the backend uses Puppeteer with the Stealth plugin to avoid detection.
+
+## Troubleshooting
+
+### Common Issues
+- **Failed to resolve address for stun.l.google.com**: This is related to WebRTC and should not affect the functionality of fetching job descriptions.
+- **Empty job details**: Ensure that the user-agent is set correctly and add delays to mimic human behavior.
+
+### Logs
+Check the backend logs for detailed error messages and troubleshooting information.

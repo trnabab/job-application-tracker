@@ -4,7 +4,8 @@ import axios from 'axios';
 const AddJobApplication = ({ onAdd }) => {
   const [status, setStatus] = useState('');
   const [description, setDescription] = useState('');
-  const [link, setLink] = useState('');
+  const [prospleLink, setProspleLink] = useState('');
+  const [linkedinLink, setLinkedinLink] = useState('');
   const [date, setDate] = useState('');
   const [alertDate, setAlertDate] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -14,10 +15,12 @@ const AddJobApplication = ({ onAdd }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const link = prospleLink || linkedinLink;
     onAdd({ status, description, link, date, alertDate, title, company, startDate });
     setStatus('');
     setDescription('');
-    setLink('');
+    setProspleLink('');
+    setLinkedinLink('');
     setDate('');
     setAlertDate('');
     setTitle('');
@@ -26,13 +29,11 @@ const AddJobApplication = ({ onAdd }) => {
   };
 
   const handleFetchDescription = async () => {
+    const link = prospleLink || linkedinLink;
     if (!link) return;
-    
     setIsLoading(true);
     try {
-      // Wait for 2 seconds before fetching
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
       const response = await axios.post('http://localhost:3001/fetch-job-description', { url: link });
       const { jobDescription, jobTitle, companyName, startDate } = response.data;
       setDescription(jobDescription);
@@ -67,13 +68,21 @@ const AddJobApplication = ({ onAdd }) => {
         </select>
       </div>
       <div>
-        <label>Job Link:</label>
+        <label>Prosple Link:</label>
         <input
           type="url"
-          value={link}
-          onChange={(e) => setLink(e.target.value)}
+          value={prospleLink}
+          onChange={(e) => setProspleLink(e.target.value)}
           onBlur={handleFetchDescription}
-          required
+        />
+      </div>
+      <div>
+        <label>LinkedIn Link:</label>
+        <input
+          type="url"
+          value={linkedinLink}
+          onChange={(e) => setLinkedinLink(e.target.value)}
+          onBlur={handleFetchDescription}
         />
       </div>
       <div>

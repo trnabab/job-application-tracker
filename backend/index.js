@@ -3,12 +3,17 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
 const cors = require('cors');
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const { Builder, By, until } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
+const firefox = require('selenium-webdriver/firefox');
 const ProxyAgent = require('proxy-agent');
 const app = express();
 const port = 3001;
 const jobApplicationsFile = 'jobApplications.json';
+
+puppeteer.use(StealthPlugin());
 
 const userAgents = [
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -74,6 +79,110 @@ app.post('/fetch-job-description', async (req, res) => {
   } catch (error) {
     console.error('Error fetching job description:', error.message, error.stack);
     res.status(500).json({ error: 'Failed to fetch job description', details: error.message });
+  }
+});
+
+app.post('/fetch-linkedin-job-description', async (req, res) => {
+  const { url } = req.body;
+  console.log('Received LinkedIn URL:', url);
+
+  try {
+    const options = new firefox.Options();
+    options.addArguments('--headless');
+    options.addArguments('--no-sandbox');
+    options.addArguments('--disable-dev-shm-usage');
+    options.addArguments('--disable-blink-features=AutomationControlled');
+
+    const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36';
+    options.addArguments(`--user-agent=${userAgent}`);
+
+    // Set DNS to Google's DNS
+    options.addArguments('--dns-prefetch-disable');
+    options.addArguments('--host-resolver-rules=MAP * 8.8.8.8,MAP * 8.8.4.4');
+
+    const driver = await new Builder().forBrowser('firefox').setFirefoxOptions(options).build();
+    await driver.get(url);
+
+    // Simulate human-like behavior
+    await driver.executeScript('window.scrollTo(0, document.body.scrollHeight)');
+    await driver.sleep(2000);
+    await driver.executeScript('window.scrollTo(0, 0)');
+    await driver.sleep(2000);
+
+    // Wait for the body to be loaded
+    await driver.wait(until.elementLocated(By.css('body')), 60000);
+
+    // Wait additional 5 seconds to allow content to load
+    await driver.sleep(5000);
+
+    // Press the button to dismiss overlay if it exists
+    try {
+      const dismissButton = await driver.findElement(By.xpath('/html/body/div[6]/div/div/section/button'));
+      if (dismissButton) {
+        await dismissButton.click();
+        await driver.sleep(2000); // Wait for the overlay to close
+      }
+    } catch (e) {
+      console.log('No overlay found or failed to close overlay:', e.message);
+    }
+
+    // Get job title
+    let jobTitle = '';
+    try {
+      const jobTitleElement = await driver.findElement(By.xpath("//h1[contains(@class,'topcard__title')]")).getText();
+      jobTitle = jobTitleElement ? jobTitleElement : '';
+    } catch (e) {
+      console.log('Failed to get job title:', e.message);
+    }
+
+    // Get company name
+    let companyName = '';
+    try {
+      const companyNameElement = await driver.findElement(By.xpath("//a[contains(@class,'topcard__org-name-link')]")).getText();
+      companyName = companyNameElement ? companyNameElement : '';
+    } catch (e) {
+      console.log('Failed to get company name:', e.message);
+    }
+
+    // Get start date
+    let startDate = '';
+    try {
+      const startDateElement = await driver.findElement(By.xpath("//span[contains(@class,'posted-time-ago__text')]")).getText();
+      startDate = startDateElement ? startDateElement.replace('Posted ', '') : '';
+    } catch (e) {
+      console.log('Failed to get start date:', e.message);
+    }
+
+    // Press the button to show more job description
+    try {
+      const showMoreButton = await driver.findElement(By.xpath("//button[contains(@aria-label,'Show more')]")).click();
+      await driver.sleep(2000); // Wait for the job description to expand
+    } catch (e) {
+      console.log('No show more button found or failed to click:', e.message);
+    }
+
+    // Get job description
+    let jobDescription = '';
+    try {
+      const jobDescriptionElement = await driver.findElement(By.xpath("//div[contains(@class,'show-more-less-html__markup')]")).getText();
+      jobDescription = jobDescriptionElement ? jobDescriptionElement : '';
+    } catch (e) {
+      console.log('Failed to get job description:', e.message);
+    }
+
+    const content = {
+      jobTitle,
+      companyName,
+      startDate,
+      jobDescription
+    };
+
+    await driver.quit();
+    console.log('Fetched LinkedIn job description:', content);
+    res.json(content);
+  } catch (error) {
+    console.error('Error fetching LinkedIn job description:', error.message, error.stack);
+    res.status(500).json({ error: 'Failed to fetch LinkedIn job description', details: error.message });
   }
 });
 

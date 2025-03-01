@@ -32,6 +32,24 @@ function App() {
     }
   };
 
+  const handleAddLinkedInApplication = async (application) => {
+    try {
+      const response = await axios.post('http://localhost:3001/fetch-linkedin-job-description', { url: application.link });
+      console.log('Fetched LinkedIn application:', response.data); // Log fetched LinkedIn application
+      const newApplication = {
+        ...application,
+        description: response.data.jobDescription,
+        title: response.data.jobTitle,
+        company: response.data.companyName,
+        startDate: response.data.startDate
+      };
+      setApplications([...applications, newApplication]);
+      setNotification('New LinkedIn job application added!');
+    } catch (error) {
+      console.error('Failed to add LinkedIn job application', error);
+    }
+  };
+
   const handleUpdateStatus = (index, newStatus) => {
     const updatedApplications = [...applications];
     updatedApplications[index].status = newStatus;
@@ -53,10 +71,15 @@ function App() {
     setNotification('Job application alert date updated!');
   };
 
-  const handleDeleteApplication = (index) => {
-    const updatedApplications = applications.filter((_, i) => i !== index);
-    setApplications(updatedApplications);
-    setNotification('Job application deleted!');
+  const handleDeleteApplication = async (index) => {
+    try {
+      await axios.delete(`http://localhost:3001/job-applications/${index}`);
+      const updatedApplications = applications.filter((_, i) => i !== index);
+      setApplications(updatedApplications);
+      setNotification('Job application deleted!');
+    } catch (error) {
+      console.error('Failed to delete job application', error);
+    }
   };
 
   useEffect(() => {
