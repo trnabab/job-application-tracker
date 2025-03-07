@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
 import './JobApplicationList.css';
 
-const JobApplicationList = ({ applications, onUpdateStatus, onUpdateDate, onUpdateAlertDate, onDelete }) => {
+const JobApplicationList = ({ applications, onUpdateStatus, onUpdateDate, onUpdateAlertDate, onUpdateApplication, onDelete }) => {
   const [expandedIndex, setExpandedIndex] = useState(null);
 
   const handleStatusChange = (index, newStatus) => {
-    onUpdateStatus(index, newStatus);
+    const updatedApplication = { ...applications[index], status: newStatus };
+    onUpdateApplication(index, updatedApplication);
   };
 
   const handleDateChange = (index, newDate) => {
-    onUpdateDate(index, newDate);
+    const updatedApplication = { ...applications[index], date: newDate };
+    onUpdateApplication(index, updatedApplication);
   };
 
   const handleAlertDateChange = (index, newAlertDate) => {
-    onUpdateAlertDate(index, newAlertDate);
+    const updatedApplication = { ...applications[index], alertDate: newAlertDate };
+    onUpdateApplication(index, updatedApplication);
   };
 
   const toggleDescription = (index) => {
@@ -53,6 +56,7 @@ const JobApplicationList = ({ applications, onUpdateStatus, onUpdateDate, onUpda
                   <option value="Stage 3">Stage 3</option>
                   <option value="Waiting">Waiting</option>
                   <option value="Interview Pending">Interview Pending</option>
+                  <option value="Rejected">Rejected</option>
                 </select>
               </td>
               <td><a href={app.link} target="_blank" rel="noopener noreferrer">{app.link}</a></td>

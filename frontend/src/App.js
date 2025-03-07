@@ -71,6 +71,18 @@ function App() {
     setNotification('Job application alert date updated!');
   };
 
+  const handleUpdateApplication = async (index, updatedApplication) => {
+    try {
+      const response = await axios.put(`http://localhost:3001/job-applications/${index}`, updatedApplication);
+      const updatedApplications = [...applications];
+      updatedApplications[index] = response.data;
+      setApplications(updatedApplications);
+      setNotification('Job application updated!');
+    } catch (error) {
+      console.error('Failed to update job application', error);
+    }
+  };
+
   const handleDeleteApplication = async (index) => {
     try {
       await axios.delete(`http://localhost:3001/job-applications/${index}`);
@@ -98,7 +110,7 @@ function App() {
       </header>
       {notification && <div className="notification">{notification}</div>}
       <AddJobApplication onAdd={handleAddApplication} />
-      <JobApplicationList applications={applications} onUpdateStatus={handleUpdateStatus} onUpdateDate={handleUpdateDate} onUpdateAlertDate={handleUpdateAlertDate} onDelete={handleDeleteApplication} />
+      <JobApplicationList applications={applications} onUpdateStatus={handleUpdateStatus} onUpdateDate={handleUpdateDate} onUpdateAlertDate={handleUpdateAlertDate} onUpdateApplication={handleUpdateApplication} onDelete={handleDeleteApplication} />
     </div>
   );
 }

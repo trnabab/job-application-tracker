@@ -3,17 +3,14 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
 const cors = require('cors');
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const { Builder, By, until } = require('selenium-webdriver');
 const chrome = require('selenium-webdriver/chrome');
-const firefox = require('selenium-webdriver/firefox');
 const ProxyAgent = require('proxy-agent');
+const schedule = require('node-schedule');
+const nodemailer = require('nodemailer');
 const app = express();
 const port = 3001;
 const jobApplicationsFile = 'jobApplications.json';
-
-puppeteer.use(StealthPlugin());
 
 const userAgents = [
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -84,102 +81,34 @@ app.post('/fetch-job-description', async (req, res) => {
 
 app.post('/fetch-linkedin-job-description', async (req, res) => {
   const { url } = req.body;
-  console.log('Received LinkedIn URL:', url);
-
   try {
-    const options = new firefox.Options();
-    options.addArguments('--headless');
-    options.addArguments('--no-sandbox');
-    options.addArguments('--disable-dev-shm-usage');
-    options.addArguments('--disable-blink-features=AutomationControlled');
-
-    const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36';
-    options.addArguments(`--user-agent=${userAgent}`);
-
-    // Set DNS to Google's DNS
-    options.addArguments('--dns-prefetch-disable');
-    options.addArguments('--host-resolver-rules=MAP * 8.8.8.8,MAP * 8.8.4.4');
-
-    const driver = await new Builder().forBrowser('firefox').setFirefoxOptions(options).build();
-    await driver.get(url);
-
-    // Simulate human-like behavior
-    await driver.executeScript('window.scrollTo(0, document.body.scrollHeight)');
-    await driver.sleep(2000);
-    await driver.executeScript('window.scrollTo(0, 0)');
-    await driver.sleep(2000);
-
-    // Wait for the body to be loaded
-    await driver.wait(until.elementLocated(By.css('body')), 60000);
-
-    // Wait additional 5 seconds to allow content to load
-    await driver.sleep(5000);
-
-    // Press the button to dismiss overlay if it exists
-    try {
-      const dismissButton = await driver.findElement(By.xpath('/html/body/div[6]/div/div/section/button'));
-      if (dismissButton) {
-        await dismissButton.click();
-        await driver.sleep(2000); // Wait for the overlay to close
-      }
-    } catch (e) {
-      console.log('No overlay found or failed to close overlay:', e.message);
-    }
-
-    // Get job title
-    let jobTitle = '';
-    try {
-      const jobTitleElement = await driver.findElement(By.xpath("//h1[contains(@class,'topcard__title')]")).getText();
-      jobTitle = jobTitleElement ? jobTitleElement : '';
-    } catch (e) {
-      console.log('Failed to get job title:', e.message);
-    }
-
-    // Get company name
-    let companyName = '';
-    try {
-      const companyNameElement = await driver.findElement(By.xpath("//a[contains(@class,'topcard__org-name-link')]")).getText();
-      companyName = companyNameElement ? companyNameElement : '';
-    } catch (e) {
-      console.log('Failed to get company name:', e.message);
-    }
-
-    // Get start date
-    let startDate = '';
-    try {
-      const startDateElement = await driver.findElement(By.xpath("//span[contains(@class,'posted-time-ago__text')]")).getText();
-      startDate = startDateElement ? startDateElement.replace('Posted ', '') : '';
-    } catch (e) {
-      console.log('Failed to get start date:', e.message);
-    }
-
-    // Press the button to show more job description
-    try {
-      const showMoreButton = await driver.findElement(By.xpath("//button[contains(@aria-label,'Show more')]")).click();
-      await driver.sleep(2000); // Wait for the job description to expand
-    } catch (e) {
-      console.log('No show more button found or failed to click:', e.message);
-    }
-
-    // Get job description
-    let jobDescription = '';
-    try {
-      const jobDescriptionElement = await driver.findElement(By.xpath("//div[contains(@class,'show-more-less-html__markup')]")).getText();
-      jobDescription = jobDescriptionElement ? jobDescriptionElement : '';
-    } catch (e) {
-      console.log('Failed to get job description:', e.message);
-    }
-
-    const content = {
-      jobTitle,
-      companyName,
-      startDate,
-      jobDescription
+    const response = await axios.post('http://localhost:3001/fetch-job-description', { url });
+    const { jobDescription, jobTitle, companyName, location } = response.data;
+    const newApplication = {
+      description: jobDescription,
+      title: jobTitle,
+      company: companyName,
+      location,
+      link: url,
+      index: null // Placeholder for index
     };
-
-    await driver.quit();
-    console.log('Fetched LinkedIn job description:', content);
-    res.json(content);
+    fs.readFile(jobApplicationsFile, 'utf8', (err, data) => {
+      if (err) {
+        console.error('Error reading job applications:', err.message, err.stack);
+        return res.status(500).json({ error: 'Failed to read job applications' });
+      }
+      const jobApplications = JSON.parse(data);
+      newApplication.index = jobApplications.length;
+      jobApplications.push(newApplication);
+      fs.writeFile(jobApplicationsFile, JSON.stringify(jobApplications, null, 2), (err) => {
+        if (err) {
+          console.error('Error saving job application:', err.message, err.stack);
+          return res.status(500).json({ error: 'Failed to save job application' });
+        }
+        console.log('Job applications:', jobApplications);
+        res.status(201).json(newApplication);
+      });
+    });
   } catch (error) {
     console.error('Error fetching LinkedIn job description:', error.message, error.stack);
     res.status(500).json({ error: 'Failed to fetch LinkedIn job description', details: error.message });
@@ -198,25 +127,33 @@ app.get('/job-applications', (req, res) => {
 });
 
 app.post('/job-applications', async (req, res) => {
+  console.log('POST /job-applications endpoint hit'); // Log endpoint hit
   const newApplication = req.body;
+  console.log('Received new application:', newApplication); // Log received application
   try {
+    console.log('Fetching job description for URL:', newApplication.link); // Log URL
     const response = await axios.post('http://localhost:3001/fetch-job-description', { url: newApplication.link });
+    console.log('Fetched job description response:', response.data); // Log fetched job description response
     const { jobDescription, jobTitle, companyName, location } = response.data;
     newApplication.description = jobDescription;
     newApplication.title = jobTitle;
     newApplication.company = companyName;
     newApplication.location = location;
     if (!newApplication.description) {
+      console.log('No job description found'); // Log missing job description
       return res.status(500).json({ error: 'Failed to fetch job description' });
     }
+    console.log('Reading job applications file'); // Log file read
     fs.readFile(jobApplicationsFile, 'utf8', (err, data) => {
       if (err) {
         console.error('Error reading job applications:', err.message, err.stack); // Log error
         return res.status(500).json({ error: 'Failed to read job applications' });
       }
+      console.log('Read job applications data:', data); // Log read job applications data
       const jobApplications = JSON.parse(data);
       newApplication.index = jobApplications.length; // Add index field
       jobApplications.push(newApplication);
+      console.log('Writing updated job applications to file'); // Log file write
       fs.writeFile(jobApplicationsFile, JSON.stringify(jobApplications, null, 2), (err) => {
         if (err) {
           console.error('Error saving job application:', err.message, err.stack); // Log error
@@ -230,6 +167,29 @@ app.post('/job-applications', async (req, res) => {
     console.error('Error fetching job description:', error.message, error.stack); // Log error
     res.status(500).json({ error: 'Failed to fetch job description' });
   }
+});
+
+app.put('/job-applications/:index', (req, res) => {
+  const { index } = req.params;
+  const updatedApplication = req.body;
+  fs.readFile(jobApplicationsFile, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading job applications:', err.message, err.stack);
+      return res.status(500).json({ error: 'Failed to read job applications' });
+    }
+    const jobApplications = JSON.parse(data);
+    if (index < 0 || index >= jobApplications.length) {
+      return res.status(404).json({ error: 'Job application not found' });
+    }
+    jobApplications[index] = { ...jobApplications[index], ...updatedApplication };
+    fs.writeFile(jobApplicationsFile, JSON.stringify(jobApplications, null, 2), (err) => {
+      if (err) {
+        console.error('Error saving job applications:', err.message, err.stack);
+        return res.status(500).json({ error: 'Failed to save job applications' });
+      }
+      res.status(200).json(jobApplications[index]);
+    });
+  });
 });
 
 app.delete('/job-applications/:index', (req, res) => {
@@ -253,9 +213,55 @@ app.delete('/job-applications/:index', (req, res) => {
   });
 });
 
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'your-email@gmail.com',
+    pass: 'your-email-password'
+  }
+});
+
+const sendAlertNotification = (application) => {
+  const mailOptions = {
+    from: 'your-email@gmail.com',
+    to: 'recipient-email@gmail.com',
+    subject: 'Job Application Alert',
+    text: `Reminder: You have an alert for the job application at ${application.company} with status ${application.status}.`
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+};
+
+const scheduleAlerts = () => {
+  fs.readFile(jobApplicationsFile, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading job applications:', err.message, err.stack);
+      return;
+    }
+    const jobApplications = JSON.parse(data);
+    jobApplications.forEach((application) => {
+      if (application.alertDate) {
+        const alertDate = new Date(application.alertDate);
+        schedule.scheduleJob(alertDate, () => {
+          sendAlertNotification(application);
+        });
+      }
+    });
+  });
+};
+
+scheduleAlerts();
+
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Server is running on http://localhost:${port}`); // Log server startup
   if (!fs.existsSync(jobApplicationsFile)) {
     fs.writeFileSync(jobApplicationsFile, '[]');
   }
+  scheduleAlerts();
 });

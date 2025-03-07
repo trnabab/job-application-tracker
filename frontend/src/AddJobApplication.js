@@ -65,6 +65,7 @@ const AddJobApplication = ({ onAdd }) => {
           <option value="Stage 3">Stage 3</option>
           <option value="Waiting">Waiting</option>
           <option value="Interview Pending">Interview Pending</option>
+          <option value="Rejected">Rejected</option>
         </select>
       </div>
       <div>
