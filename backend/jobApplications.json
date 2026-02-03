@@ -220,7 +220,7 @@
     "index": 19
   },
   {
-    "status": "Applied",
+    "status": "Rejected",
     "description": "",
     "link": "https://www.seek.com.au/job/90007998?ref=applied",
     "date": "2026-02-02",
@@ -240,5 +240,16 @@
     "company": "sportsbet.com.au",
     "startDate": "",
     "index": 21
+  },
+  {
+    "status": "Applied",
+    "description": "📊 Junior Data Scientist\n\n📍 Location: Sydney, NSW\n💼 Employment Type: Permanent\n💰 Salary: $110,000 + Super + Bonus\n\n🧠 About the Role\n\nWe are seeking a motivated Junior Data Scientist to join a growing data and AI team based in Sydney. This is a permanent opportunity for someone early in their career who is excited about using Python, AI tools, and automation to solve real-world business problems and build practical AI-driven solutions.\n\nYou'll work closely with senior engineers and data scientists to design, build, and deploy data pipelines and AI-powered workflows that drive efficiency and insight across the organisation.\n\n🛠️ Key Responsibilities\n\nDevelop and maintain Python-based scripts for data analysis, automation, and AI workflows.\nBuild and support AI-powered solutions to solve business challenges.\nUse modern AI developer tools (e.g. Cursor, Qodo, or similar) to accelerate development.\nCreate and maintain web scraping scripts for structured and unstructured data collection.\nPerform data extraction, cleansing, and transformation across multiple data sources.\nLeverage AI tools to automate repetitive data and operational tasks.\nCollaborate with cross-functional teams to understand data requirements and deliver insights.\nSupport the deployment and monitoring of data and AI solutions in production.\n🎓 Skills & Experience\n\nCommercial or project-based experience using Python for data analysis or automation.\nComfortable using AI tools proficiently to enhance productivity and solution design.\nExperience or exposure to Cursor, Qodo, or similar AI-assisted coding tools.\nHands-on experience with web scraping, APIs, or data ingestion pipelines.\nStrong understanding of data cleansing, validation, and preparation techniques.\nInterest in building and scaling AI-driven solutions.\nFamiliarity with version control (Git) and basic software engineering practices.\nA degree in Data Science, Computer Science, Engineering, Mathematics, or a related field is preferred.\n✨ What's on Offer\n\nCompetitive salary of $110k + Super + Bonus\nPermanent role based in Sydney\nHands-on exposure to AI, automation, and real-world data problems\nMentorship from experienced data scientists and engineers\nSupportive, learning-focused environment with strong career progression\nOpportunity to work with modern tools and cutting-edge AI technologies 🚀\nIf you feel you possess the relevant skills to the above, apply now with most updated CV!",
+    "link": "https://www.seek.com.au/job/89656781?type=standard&ref=search-standalone#sol=5266dac23b4dea743b36e13ec6ae8809f9e1b948",
+    "date": "2026-02-03",
+    "alertDate": "",
+    "title": "Junior Data Scientist",
+    "company": "Talenza",
+    "startDate": "",
+    "index": 22
   }
 ]
