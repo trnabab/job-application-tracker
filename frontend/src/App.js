@@ -4,6 +4,8 @@ import AddJobApplication from './AddJobApplication';
 import JobApplicationList from './JobApplicationList';
 import axios from 'axios';
 
+const API_URL = 'http://localhost:3001';
+
 function App() {
   const [applications, setApplications] = useState([]);
   const [notification, setNotification] = useState('');
@@ -11,8 +13,8 @@ function App() {
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/job-applications');
-        console.log('Fetched applications:', response.data); // Log fetched applications
+        const response = await axios.get(`${API_URL}/job-applications`);
+        console.log('Fetched applications:', response.data);
         setApplications(response.data);
       } catch (error) {
         console.error('Failed to fetch job applications', error);
@@ -23,8 +25,8 @@ function App() {
 
   const handleAddApplication = async (application) => {
     try {
-      const response = await axios.post('http://localhost:3001/job-applications', application);
-      console.log('Added application:', response.data); // Log added application
+      const response = await axios.post(`${API_URL}/job-applications`, application);
+      console.log('Added application:', response.data);
       setApplications([...applications, response.data]);
       setNotification('New job application added!');
     } catch (error) {
@@ -32,31 +34,55 @@ function App() {
     }
   };
 
-  const handleUpdateStatus = (index, newStatus) => {
-    const updatedApplications = [...applications];
-    updatedApplications[index].status = newStatus;
-    setApplications(updatedApplications);
-    setNotification('Job application status updated!');
+  const handleUpdateStatus = async (index, newStatus) => {
+    try {
+      const updatedApplications = [...applications];
+      updatedApplications[index].status = newStatus;
+      setApplications(updatedApplications);
+      await axios.put(`${API_URL}/job-applications/${index}`, updatedApplications[index]);
+      setNotification('Job application status updated!');
+    } catch (error) {
+      console.error('Failed to update status', error);
+      setNotification('Failed to update status');
+    }
   };
 
-  const handleUpdateDate = (index, newDate) => {
-    const updatedApplications = [...applications];
-    updatedApplications[index].date = newDate;
-    setApplications(updatedApplications);
-    setNotification('Job application date updated!');
+  const handleUpdateDate = async (index, newDate) => {
+    try {
+      const updatedApplications = [...applications];
+      updatedApplications[index].date = newDate;
+      setApplications(updatedApplications);
+      await axios.put(`${API_URL}/job-applications/${index}`, updatedApplications[index]);
+      setNotification('Job application date updated!');
+    } catch (error) {
+      console.error('Failed to update date', error);
+      setNotification('Failed to update date');
+    }
   };
 
-  const handleUpdateAlertDate = (index, newAlertDate) => {
-    const updatedApplications = [...applications];
-    updatedApplications[index].alertDate = newAlertDate;
-    setApplications(updatedApplications);
-    setNotification('Job application alert date updated!');
+  const handleUpdateAlertDate = async (index, newAlertDate) => {
+    try {
+      const updatedApplications = [...applications];
+      updatedApplications[index].alertDate = newAlertDate;
+      setApplications(updatedApplications);
+      await axios.put(`${API_URL}/job-applications/${index}`, updatedApplications[index]);
+      setNotification('Job application alert date updated!');
+    } catch (error) {
+      console.error('Failed to update alert date', error);
+      setNotification('Failed to update alert date');
+    }
   };
 
-  const handleDeleteApplication = (index) => {
-    const updatedApplications = applications.filter((_, i) => i !== index);
-    setApplications(updatedApplications);
-    setNotification('Job application deleted!');
+  const handleDeleteApplication = async (index) => {
+    try {
+      await axios.delete(`${API_URL}/job-applications/${index}`);
+      const updatedApplications = applications.filter((_, i) => i !== index);
+      setApplications(updatedApplications);
+      setNotification('Job application deleted!');
+    } catch (error) {
+      console.error('Failed to delete job application', error);
+      setNotification('Failed to delete application');
+    }
   };
 
   useEffect(() => {
@@ -75,7 +101,13 @@ function App() {
       </header>
       {notification && <div className="notification">{notification}</div>}
       <AddJobApplication onAdd={handleAddApplication} />
-      <JobApplicationList applications={applications} onUpdateStatus={handleUpdateStatus} onUpdateDate={handleUpdateDate} onUpdateAlertDate={handleUpdateAlertDate} onDelete={handleDeleteApplication} />
+      <JobApplicationList 
+        applications={applications} 
+        onUpdateStatus={handleUpdateStatus} 
+        onUpdateDate={handleUpdateDate} 
+        onUpdateAlertDate={handleUpdateAlertDate} 
+        onDelete={handleDeleteApplication} 
+      />
     </div>
   );
 }
